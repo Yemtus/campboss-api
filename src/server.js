@@ -1,0 +1,86 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+// Security
+app.use(helmet());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  message: { success: false, message: 'Too many requests, please try again later.' },
+});
+app.use(limiter);
+
+// CORS
+app.use(cors({
+  origin: process.env.CORS_ORIGIN?.split(',') || '*',
+  credentials: true,
+}));
+
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Logging
+app.use(morgan('dev'));
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ success: true, message: 'Camp Boss API is running', timestamp: new Date() });
+});
+
+// Routes
+import authRouter from './modules/auth/auth.routes.js';
+import usersRouter from './modules/users/users.routes.js';
+import haccpRouter from './modules/haccp/haccp.routes.js';
+import inventoryRouter from './modules/inventory/inventory.routes.js';
+import receivingRouter from './modules/receiving/receiving.routes.js';
+import cleaningRouter from './modules/cleaning/cleaning.routes.js';
+import handoverRouter from './modules/handover/handover.routes.js';
+import inspectionsRouter from './modules/inspections/inspections.routes.js';
+import attendanceRouter from './modules/attendance/attendance.routes.js';
+import budgetRouter from './modules/budget/budget.routes.js';
+import notificationsRouter from './modules/notifications/notifications.routes.js';
+import settingsRouter from './modules/settings/settings.routes.js';
+
+app.use('/api/auth', authRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/haccp', haccpRouter);
+app.use('/api/inventory', inventoryRouter);
+app.use('/api/receiving', receivingRouter);
+app.use('/api/cleaning', cleaningRouter);
+app.use('/api/handover', handoverRouter);
+app.use('/api/inspections', inspectionsRouter);
+app.use('/api/attendance', attendanceRouter);
+app.use('/api/budget', budgetRouter);
+app.use('/api/notifications', notificationsRouter);
+app.use('/api/settings', settingsRouter);
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal server error',
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: 'Route not found' });
+});
+
+app.listen(PORT, () => {
+  console.log(`✅ Camp Boss API running on port ${PORT}`);
+  console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
+});

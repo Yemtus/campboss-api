@@ -1,0 +1,420 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id            Int      @id @default(autoincrement())
+  username      String   @unique
+  password_hash String
+  full_name     String
+  role          String   @default("SUPERVISOR")
+  platform_id   Int?
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  platform           Platform?        @relation(fields: [platform_id], references: [id])
+  refresh_tokens     RefreshToken[]
+  haccp_checks       HaccpCheck[]     @relation("HaccpChecker")
+  haccp_signoffs     HaccpCheck[]     @relation("HaccpSigner")
+  receiving_checks   ReceivingCheck[] @relation("ReceivingChecker")
+  receiving_signoffs ReceivingCheck[] @relation("ReceivingSigner")
+  handover_authors   HandoverReport[] @relation("HandoverAuthor")
+  handover_signoffs  HandoverReport[] @relation("HandoverSigner")
+  inspections        Inspection[]     @relation("Inspector")
+  cleaning_logs      CleaningLog[]
+  shifts_created     Shift[]
+  attendance         Attendance[]
+  expenses           Expense[]
+  waste_logs         WasteLog[]
+  notifications      Notification[]
+  audit_logs         AuditLog[]
+  photos             PhotoEvidence[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique
+  user_id    Int
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model Platform {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  code       String?  @unique
+  location   String?
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  users            User[]
+  inventory_items  InventoryItem[]
+  haccp_points     HaccpMonitoringPoint[]
+  haccp_checks     HaccpCheck[]
+  receiving_checks ReceivingCheck[]
+  cleaning_tasks   CleaningTask[]
+  handover_reports HandoverReport[]
+  inspections      Inspection[]
+  shifts           Shift[]
+  budget_periods   BudgetPeriod[]
+
+  @@map("platforms")
+}
+
+model InventoryItem {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  sku                String?
+  category           String?
+  unit_of_measure    String   @default("pcs")
+  reorder_threshold  Decimal  @default(10)
+  critical_threshold Decimal  @default(5)
+  storage_location   String?
+  is_active          Boolean  @default(true)
+  platform_id        Int?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  platform   Platform?       @relation(fields: [platform_id], references: [id])
+  batches    InventoryBatch[]
+  waste_logs WasteLog[]
+  photos     PhotoEvidence[]
+
+  @@map("inventory_items")
+}
+
+model InventoryBatch {
+  id                 Int       @id @default(autoincrement())
+  item_id            Int
+  batch_number       String?
+  supplier           String?
+  quantity_received  Decimal
+  quantity_remaining Decimal
+  unit_cost          Decimal?
+  received_date      DateTime  @db.Date
+  expiry_date        DateTime? @db.Date
+  status             String    @default("ACTIVE")
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+
+  item InventoryItem @relation(fields: [item_id], references: [id])
+
+  @@map("inventory_batches")
+}
+
+model HaccpMonitoringPoint {
+  id          Int      @id @default(autoincrement())
+  name        String
+  check_type  String   @default("TEMPERATURE")
+  min_temp    Decimal?
+  max_temp    Decimal?
+  is_active   Boolean  @default(true)
+  platform_id Int?
+
+  platform Platform?    @relation(fields: [platform_id], references: [id])
+  checks   HaccpCheck[]
+
+  @@map("haccp_monitoring_points")
+}
+
+model HaccpCheck {
+  id                Int       @id @default(autoincrement())
+  point_id          Int
+  temperature       Decimal?
+  result            String
+  corrective_action String?
+  checked_at        DateTime  @default(now())
+  checked_by_id     Int
+  signed_by_id      Int?
+  signed_at         DateTime?
+  sign_device       String?
+  platform_id       Int?
+
+  point      HaccpMonitoringPoint @relation(fields: [point_id], references: [id])
+  checked_by User                 @relation("HaccpChecker", fields: [checked_by_id], references: [id])
+  signed_by  User?                @relation("HaccpSigner", fields: [signed_by_id], references: [id])
+  platform   Platform?            @relation(fields: [platform_id], references: [id])
+  photos     PhotoEvidence[]
+
+  @@index([checked_at])
+  @@map("haccp_checks")
+}
+
+model ReceivingCheck {
+  id            Int       @id @default(autoincrement())
+  supplier      String
+  invoice_no    String?
+  items_summary String?
+  status        String    @default("ACCEPTED")
+  notes         String?
+  checked_at    DateTime  @default(now())
+  checked_by_id Int
+  signed_by_id  Int?
+  signed_at     DateTime?
+  sign_device   String?
+  platform_id   Int?
+
+  checked_by User           @relation("ReceivingChecker", fields: [checked_by_id], references: [id])
+  signed_by  User?          @relation("ReceivingSigner", fields: [signed_by_id], references: [id])
+  platform   Platform?      @relation(fields: [platform_id], references: [id])
+  photos     PhotoEvidence[]
+
+  @@map("receiving_checks")
+}
+
+model CleaningTask {
+  id          Int     @id @default(autoincrement())
+  name        String
+  area        String?
+  frequency   String  @default("daily")
+  assigned_to String?
+  is_active   Boolean @default(true)
+  platform_id Int?
+
+  platform Platform?     @relation(fields: [platform_id], references: [id])
+  logs     CleaningLog[]
+
+  @@map("cleaning_tasks")
+}
+
+model CleaningLog {
+  id           Int      @id @default(autoincrement())
+  task_id      Int
+  logged_by_id Int
+  status       String   @default("COMPLETED")
+  notes        String?
+  logged_at    DateTime @default(now())
+
+  task      CleaningTask @relation(fields: [task_id], references: [id])
+  logged_by User         @relation(fields: [logged_by_id], references: [id])
+
+  @@map("cleaning_logs")
+}
+
+model HandoverReport {
+  id           Int       @id @default(autoincrement())
+  shift        String
+  date         DateTime  @db.Date
+  summary      String?
+  notes        String?
+  status       String    @default("draft")
+  author_id    Int
+  signed_by_id Int?
+  signed_at    DateTime?
+  sign_device  String?
+  platform_id  Int?
+  created_at   DateTime  @default(now())
+
+  author    User      @relation("HandoverAuthor", fields: [author_id], references: [id])
+  signed_by User?     @relation("HandoverSigner", fields: [signed_by_id], references: [id])
+  platform  Platform? @relation(fields: [platform_id], references: [id])
+
+  @@map("handover_reports")
+}
+
+model Inspection {
+  id           Int      @id @default(autoincrement())
+  title        String
+  type         String   @default("INTERNAL")
+  conducted_at DateTime @default(now())
+  inspector_id Int
+  score        Int?
+  status       String   @default("COMPLETED")
+  notes        String?
+  platform_id  Int?
+
+  inspector User             @relation("Inspector", fields: [inspector_id], references: [id])
+  platform  Platform?        @relation(fields: [platform_id], references: [id])
+  items     InspectionItem[]
+  photos    PhotoEvidence[]
+
+  @@map("inspections")
+}
+
+model InspectionItem {
+  id            Int     @id @default(autoincrement())
+  inspection_id Int
+  label         String
+  category      String?
+  result        String  @default("PASS")
+  notes         String?
+
+  inspection Inspection @relation(fields: [inspection_id], references: [id], onDelete: Cascade)
+
+  @@map("inspection_items")
+}
+
+model Shift {
+  id          Int      @id @default(autoincrement())
+  name        String
+  shift_type  String   @default("morning")
+  date        DateTime @db.Date
+  crew_count  Int      @default(0)
+  status      String   @default("open")
+  notes       String?
+  created_by  Int
+  platform_id Int?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  creator     User         @relation(fields: [created_by], references: [id])
+  platform    Platform?    @relation(fields: [platform_id], references: [id])
+  attendances Attendance[]
+
+  @@index([date])
+  @@map("shifts")
+}
+
+model Attendance {
+  id          Int       @id @default(autoincrement())
+  shift_id    Int
+  user_id     Int
+  status      String    @default("present")
+  sign_in_at  DateTime?
+  sign_out_at DateTime?
+  notes       String?
+
+  shift Shift @relation(fields: [shift_id], references: [id])
+  user  User  @relation(fields: [user_id], references: [id])
+
+  @@map("attendance")
+}
+
+model BudgetPeriod {
+  id           Int      @id @default(autoincrement())
+  name         String
+  period_type  String   @default("monthly")
+  start_date   DateTime @db.Date
+  end_date     DateTime @db.Date
+  total_budget Decimal
+  notes        String?
+  created_by   Int
+  platform_id  Int?
+  created_at   DateTime @default(now())
+
+  expenses Expense[]
+  platform Platform? @relation(fields: [platform_id], references: [id])
+
+  @@map("budget_periods")
+}
+
+model Expense {
+  id               Int      @id @default(autoincrement())
+  budget_period_id Int?
+  category         String
+  description      String
+  amount           Decimal
+  expense_date     DateTime @db.Date
+  notes            String?
+  recorded_by      Int
+  created_at       DateTime @default(now())
+
+  budget_period BudgetPeriod? @relation(fields: [budget_period_id], references: [id])
+  recorder      User          @relation(fields: [recorded_by], references: [id])
+
+  @@map("expenses")
+}
+
+model WasteLog {
+  id          Int      @id @default(autoincrement())
+  item_id     Int?
+  description String
+  quantity    Decimal
+  unit        String
+  cost        Decimal?
+  reason      String?
+  waste_date  DateTime @db.Date
+  recorded_by Int
+  created_at  DateTime @default(now())
+
+  item     InventoryItem? @relation(fields: [item_id], references: [id])
+  recorder User           @relation(fields: [recorded_by], references: [id])
+
+  @@map("waste_logs")
+}
+
+model PhotoEvidence {
+  id                 Int      @id @default(autoincrement())
+  url                String
+  thumbnail_url      String?
+  caption            String?
+  uploaded_by_id     Int
+  haccp_check_id     Int?
+  receiving_check_id Int?
+  inspection_id      Int?
+  inventory_item_id  Int?
+  created_at         DateTime @default(now())
+
+  uploaded_by     User            @relation(fields: [uploaded_by_id], references: [id])
+  haccp_check     HaccpCheck?     @relation(fields: [haccp_check_id], references: [id])
+  receiving_check ReceivingCheck? @relation(fields: [receiving_check_id], references: [id])
+  inspection      Inspection?     @relation(fields: [inspection_id], references: [id])
+  inventory_item  InventoryItem?  @relation(fields: [inventory_item_id], references: [id])
+
+  @@map("photo_evidence")
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  user_id    Int?
+  type       String   @default("INFO")
+  title      String
+  message    String
+  is_read    Boolean  @default(false)
+  link       String?
+  created_at DateTime @default(now())
+
+  user User? @relation(fields: [user_id], references: [id])
+
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  user_id    Int?
+  action     String
+  table_name String?
+  record_id  Int?
+  old_values Json?
+  new_values Json?
+  ip_address String?
+  user_agent String?
+  created_at DateTime @default(now())
+
+  user User? @relation(fields: [user_id], references: [id])
+
+  @@index([table_name, record_id])
+  @@index([created_at])
+  @@map("audit_logs")
+}
+
+model SmsLog {
+  id      Int      @id @default(autoincrement())
+  channel String
+  to      String
+  message String
+  status  String   @default("PENDING")
+  sent_at DateTime @default(now())
+
+  @@map("sms_logs")
+}
+
+model SystemSetting {
+  id         Int      @id @default(autoincrement())
+  key        String   @unique
+  value      String
+  updated_at DateTime @updatedAt
+
+  @@map("system_settings")
+}
