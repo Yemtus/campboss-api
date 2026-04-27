@@ -1,8 +1,5 @@
-[phases.setup]
-nixPkgs = ["nodejs"]
-
 [phases.build]
-cmds = ["npm install", "npx prisma generate"]
+cmds = ["npm ci", "npx prisma generate"]
 
 [start]
 cmd = "node src/server.js"
