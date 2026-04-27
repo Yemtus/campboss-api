@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schema.railway.app/railway-schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm ci && npx prisma generate"
+  },
+  "deploy": {
+    "startCommand": "node src/server.js",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}
