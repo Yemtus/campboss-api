@@ -40,12 +40,9 @@ app.get('/api/health', (req, res) => {
     success: true,
     message: 'Camp Boss API is running',
     timestamp: new Date(),
-    db_url_set: !!process.env.DATABASE_URL,
-    db_url_preview: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 30) + '...' : 'NOT SET',
-    node_env: process.env.NODE_ENV,
-test_var: process.env.TEST_VAR || 'NOT SET',
   });
 });
+
 // Routes
 import authRouter from './modules/auth/auth.routes.js';
 import usersRouter from './modules/users/users.routes.js';
