@@ -5,7 +5,6 @@ export async function sendAlert(message, haccpCheckId = null) {
   const phones = process.env.ALERT_PHONE_NUMBERS;
   const senderId = process.env.TERMII_SENDER_ID || 'CampBoss';
 
-  // Log to database regardless of whether Termii is configured
   const logEntry = async (channel, to, status) => {
     await prisma.smsLog.create({
       data: { channel, to, message, status },
@@ -19,12 +18,12 @@ export async function sendAlert(message, haccpCheckId = null) {
   }
 
   const numbers = phones.split(',').map(n => n.trim()).filter(Boolean);
+  const { default: axios } = await import('axios');
 
   for (const to of numbers) {
     // SMS
     try {
-      const { default: axios } = await import('axios');
-      await axios.post('https://api.ng.termii.com/api/sms/send', {
+      await axios.post('https://v3.api.termii.com/api/sms/send', {
         to,
         from: senderId,
         sms: message,
@@ -36,25 +35,7 @@ export async function sendAlert(message, haccpCheckId = null) {
       console.log(`[alertMessenger] SMS sent to ${to}`);
     } catch (err) {
       await logEntry('SMS', to, 'FAILED');
-      console.error(`[alertMessenger] SMS failed to ${to}:`, err.message);
-    }
-
-    // WhatsApp
-    try {
-      const { default: axios } = await import('axios');
-      await axios.post('https://api.ng.termii.com/api/sms/send', {
-        to,
-        from: senderId,
-        sms: message,
-        type: 'plain',
-        channel: 'whatsapp',
-        api_key: apiKey,
-      });
-      await logEntry('WhatsApp', to, 'DELIVERED');
-      console.log(`[alertMessenger] WhatsApp sent to ${to}`);
-    } catch (err) {
-      await logEntry('WhatsApp', to, 'FAILED');
-      console.error(`[alertMessenger] WhatsApp failed to ${to}:`, err.message);
+      console.error(`[alertMessenger] SMS failed to ${to}:`, err.response?.data || err.message);
     }
   }
 }
