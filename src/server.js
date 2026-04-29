@@ -40,6 +40,10 @@ app.get('/api/health', (req, res) => {
     success: true,
     message: 'Camp Boss API is running',
     timestamp: new Date(),
+    db_url_set: !!process.env.DATABASE_URL,
+    termii_set: !!process.env.TERMII_API_KEY,
+    phones_set: !!process.env.ALERT_PHONE_NUMBERS,
+    node_env: process.env.NODE_ENV,
   });
 });
 
