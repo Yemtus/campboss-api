@@ -97,7 +97,13 @@ router.post('/:id/photos', async (req, res, next) => {
       return res.status(500).json({ success: false, message: 'Photo upload failed', error: uploaded.error });
     }
 
-    
+    const photoRecord = await prisma.photoEvidence.create({
+      data: {
+        receiving_check_id: Number(req.params.id),
+        url: uploaded.url,
+        uploaded_by_id: req.user.id,
+      },
+    });
 
     res.json({ success: true, data: photoRecord });
   } catch (err) {
@@ -105,10 +111,4 @@ router.post('/:id/photos', async (req, res, next) => {
   }
 });
 
-export default router;const photoRecord = await prisma.photoEvidence.create({
-  data: {
-    receiving_check_id: Number(req.params.id),
-    url: uploaded.url,
-    uploaded_by_id: req.user.id,
-  },
-});
+export default router;
