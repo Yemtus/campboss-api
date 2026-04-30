@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.js';
 import prisma from '../../database/prisma.js';
+import { uploadPhoto } from '../../services/cloudinary.service.js';
 
 const router = Router();
 router.use(authenticate);
@@ -72,6 +73,39 @@ router.post('/:id/sign', async (req, res, next) => {
       },
     });
     res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/photos', async (req, res, next) => {
+  try {
+    const { photo } = req.body;
+    if (!photo) {
+      return res.status(400).json({ success: false, message: 'Photo data is required' });
+    }
+
+    const check = await prisma.receivingCheck.findUnique({
+      where: { id: Number(req.params.id) },
+    });
+    if (!check) {
+      return res.status(404).json({ success: false, message: 'Receiving check not found' });
+    }
+
+    const uploaded = await uploadPhoto(photo, 'campboss/receiving');
+    if (!uploaded.success) {
+      return res.status(500).json({ success: false, message: 'Photo upload failed', error: uploaded.error });
+    }
+
+    const photoRecord = await prisma.receivingPhoto.create({
+      data: {
+        receiving_check_id: Number(req.params.id),
+        url: uploaded.url,
+        public_id: uploaded.public_id,
+      },
+    });
+
+    res.json({ success: true, data: photoRecord });
   } catch (err) {
     next(err);
   }
