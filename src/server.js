@@ -60,6 +60,7 @@ import attendanceRouter from './modules/attendance/attendance.routes.js';
 import budgetRouter from './modules/budget/budget.routes.js';
 import notificationsRouter from './modules/notifications/notifications.routes.js';
 import settingsRouter from './modules/settings/settings.routes.js';
+import auditRouter from './modules/audit/audit.routes.js';
 
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
@@ -73,6 +74,7 @@ app.use('/api/attendance', attendanceRouter);
 app.use('/api/budget', budgetRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/audit', auditRouter);
 
 // Global error handler
 app.use((err, req, res, next) => {

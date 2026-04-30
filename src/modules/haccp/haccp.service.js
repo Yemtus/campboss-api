@@ -1,5 +1,6 @@
 import prisma from '../../database/prisma.js';
 import { sendAlert } from '../../services/alertMessenger.js';
+import { logAudit } from '../../services/audit.service.js';
 
 export async function listPoints(platformId) {
   return prisma.haccpMonitoringPoint.findMany({
@@ -71,6 +72,15 @@ export async function createCheck({ point_id, temperature, corrective_action }, 
         title: `HACCP FAIL — ${point.name}`,
         message: `Temperature ${temp}°C outside range. ${corrective_action || 'No corrective action logged.'}`,
       },
+    });
+
+    await logAudit({
+      user_id: user.id,
+      action: 'HACCP_CHECK',
+      table_name: 'haccp_checks',
+      record_id: check.id,
+      new_values: { temperature: temp, result, point: point.name },
+      req: null,
     });
   }
 
