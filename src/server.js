@@ -61,6 +61,7 @@ import budgetRouter from './modules/budget/budget.routes.js';
 import notificationsRouter from './modules/notifications/notifications.routes.js';
 import settingsRouter from './modules/settings/settings.routes.js';
 import auditRouter from './modules/audit/audit.routes.js';
+import adminRouter from './modules/admin/admin.routes.js';
 
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
@@ -75,6 +76,7 @@ app.use('/api/budget', budgetRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/audit', auditRouter);
+app.use('/api/admin', adminRouter);
 
 // Global error handler
 app.use((err, req, res, next) => {
