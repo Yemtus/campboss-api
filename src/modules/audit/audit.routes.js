@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate, requireRole } from '../../middleware/auth.js';
 import prisma from '../../database/prisma.js';
+import { generateAuditReport } from '../../services/auditReport.service.js';
 
 const router = Router();
 router.use(authenticate);
@@ -22,6 +23,19 @@ router.get('/', async (req, res, next) => {
       },
     });
     res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/report', async (req, res, next) => {
+  try {
+    const { start_date, end_date } = req.query;
+    if (!start_date || !end_date) {
+      return res.status(400).json({ success: false, message: 'start_date and end_date are required' });
+    }
+    const platformId = req.user.platform_id;
+    await generateAuditReport(platformId, start_date, end_date, res);
   } catch (err) {
     next(err);
   }
