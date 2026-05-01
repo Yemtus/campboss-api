@@ -29,7 +29,10 @@ router.post('/reset-demo', async (req, res) => {
     await prisma.shift.deleteMany({ where: { creator: { id: demoUser.id } } });
     await prisma.receivingCheck.deleteMany({ where: { checked_by_id: demoUser.id } });
     await prisma.haccpCheck.deleteMany({ where: { checked_by_id: demoUser.id } });
-    await prisma.inventoryItem.deleteMany({ where: { platform_id: platform.id } });
+    const itemIds = await prisma.inventoryItem.findMany({ where: { platform_id: platform.id }, select: { id: true } });
+const ids = itemIds.map(i => i.id);
+await prisma.inventoryBatch.deleteMany({ where: { item_id: { in: ids } } });
+await prisma.inventoryItem.deleteMany({ where: { platform_id: platform.id } });
 
     // Reseed HACCP checks
     const haccpPoints = await prisma.haccpMonitoringPoint.findMany({ take: 4 });
