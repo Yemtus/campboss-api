@@ -6,6 +6,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 model User {
   id            Int      @id @default(autoincrement())
   username      String   @unique
@@ -16,6 +17,7 @@ model User {
   is_active     Boolean  @default(true)
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
+  supplier_payments_recorded SupplierPayment[] @relation("SupplierPaymentRecorder")
 
   platform           Platform?        @relation(fields: [platform_id], references: [id])
   refresh_tokens     RefreshToken[]
@@ -57,6 +59,9 @@ model Platform {
   location   String?
   is_active  Boolean  @default(true)
   created_at DateTime @default(now())
+  contracts         Contract[]
+  supplier_payments SupplierPayment[]
+  finance_settings  FinanceSettings?
 
   users            User[]
   inventory_items  InventoryItem[]
@@ -417,4 +422,101 @@ model SystemSetting {
   updated_at DateTime @updatedAt
 
   @@map("system_settings")
+}
+  model Contract {
+  id              Int       @id @default(autoincrement())
+  platform_id     Int
+  oil_company     String
+  contract_type   String    @default("PER_HEAD")
+  currency        String    @default("NGN")
+  rate_per_head   Decimal?
+  fixed_monthly   Decimal?
+  start_date      DateTime
+  end_date        DateTime?
+  status          String    @default("ACTIVE")
+  notes           String?
+  created_at      DateTime  @default(now())
+
+  platform        Platform  @relation(fields: [platform_id], references: [id])
+  invoices        Invoice[]
+
+  @@map("contracts")
+}
+
+model Invoice {
+  id              Int       @id @default(autoincrement())
+  contract_id     Int
+  invoice_number  String    @unique
+  period_start    DateTime
+  period_end      DateTime
+  total_days      Int?
+  total_pob       Int?
+  subtotal        Decimal
+  tax_rate        Decimal   @default(0)
+  tax_amount      Decimal   @default(0)
+  total_amount    Decimal
+  currency        String    @default("NGN")
+  status          String    @default("DRAFT")
+  notes           String?
+  issued_at       DateTime?
+  due_date        DateTime?
+  paid_at         DateTime?
+  created_at      DateTime  @default(now())
+
+  contract        Contract  @relation(fields: [contract_id], references: [id])
+  items           InvoiceItem[]
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          Int      @id @default(autoincrement())
+  invoice_id  Int
+  description String
+  quantity    Decimal
+  unit_price  Decimal
+  total       Decimal
+
+  invoice     Invoice  @relation(fields: [invoice_id], references: [id])
+
+  @@map("invoice_items")
+}
+
+model SupplierPayment {
+  id                  Int       @id @default(autoincrement())
+  supplier_name       String
+  amount              Decimal
+  currency            String    @default("NGN")
+  payment_date        DateTime
+  payment_method      String    @default("BANK_TRANSFER")
+  reference           String?
+  receiving_check_id  Int?
+  notes               String?
+  recorded_by_id      Int
+  platform_id         Int?
+  created_at          DateTime  @default(now())
+
+  recorded_by         User      @relation("SupplierPaymentRecorder", fields: [recorded_by_id], references: [id])
+  platform            Platform? @relation(fields: [platform_id], references: [id])
+
+  @@map("supplier_payments")
+}
+
+model FinanceSettings {
+  id              Int      @id @default(autoincrement())
+  platform_id     Int      @unique
+  company_name    String
+  company_address String?
+  company_email   String?
+  company_phone   String?
+  bank_name       String?
+  account_number  String?
+  account_name    String?
+  logo_url        String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  platform        Platform @relation(fields: [platform_id], references: [id])
+
+  @@map("finance_settings")
 }
