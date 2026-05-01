@@ -13,10 +13,10 @@ export async function generateAuditReport(platformId, startDate, endDate, res) {
       include: { point: true, checked_by: { select: { full_name: true } } },
       orderBy: { checked_at: 'asc' },
     }),
-    prisma.cleaningTask.findMany({
-      where: { platform_id: platformId, created_at: { gte: start, lte: end } },
-      orderBy: { created_at: 'asc' },
-    }),
+   prisma.cleaningTask.findMany({
+  where: { platform_id: platformId },
+  orderBy: { name: 'asc' },
+}),
     prisma.inspection.findMany({
       where: { platform_id: platformId, inspected_at: { gte: start, lte: end } },
       include: { inspector: { select: { full_name: true } } },
