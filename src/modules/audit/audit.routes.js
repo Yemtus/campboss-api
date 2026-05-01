@@ -27,18 +27,19 @@ router.get('/', async (req, res, next) => {
     next(err);
   }
 });
-
 router.get('/report', async (req, res, next) => {
   try {
-    const { start_date, end_date } = req.query;
+    const { start_date, end_date, platform_id } = req.query;
     if (!start_date || !end_date) {
       return res.status(400).json({ success: false, message: 'start_date and end_date are required' });
     }
-    const platformId = req.user.platform_id;
+    const platformId = req.user.platform_id || (platform_id ? Number(platform_id) : null);
+    if (!platformId) {
+      return res.status(400).json({ success: false, message: 'platform_id is required for super admin users' });
+    }
     await generateAuditReport(platformId, start_date, end_date, res);
   } catch (err) {
     next(err);
   }
 });
-
 export default router;
