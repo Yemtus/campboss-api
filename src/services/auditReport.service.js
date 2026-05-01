@@ -18,10 +18,10 @@ export async function generateAuditReport(platformId, startDate, endDate, res) {
   orderBy: { name: 'asc' },
 }),
     prisma.inspection.findMany({
-      where: { platform_id: platformId, inspected_at: { gte: start, lte: end } },
-      include: { inspector: { select: { full_name: true } } },
-      orderBy: { inspected_at: 'asc' },
-    }),
+  where: { platform_id: platformId, conducted_at: { gte: start, lte: end } },
+  include: { inspector: { select: { full_name: true } } },
+  orderBy: { conducted_at: 'asc' },
+}),
     prisma.receivingCheck.findMany({
       where: { platform_id: platformId, checked_at: { gte: start, lte: end } },
       include: { checked_by: { select: { full_name: true } } },
@@ -176,7 +176,7 @@ export async function generateAuditReport(platformId, startDate, endDate, res) {
     inspections.forEach((insp, i) => {
       if (doc.y > 720) { doc.addPage(); }
       const scoreColor = Number(insp.score) >= 80 ? '#10b981' : Number(insp.score) >= 60 ? '#f59e0b' : '#ef4444';
-      row(`Inspection ${i + 1} — ${new Date(insp.inspected_at).toLocaleDateString('en-GB')}`,
+      row(`Inspection ${i + 1} — ${new Date(insp.conducted_at).toLocaleDateString('en-GB')}`,
         `Score: ${insp.score}% | Inspector: ${insp.inspector?.full_name || '—'}`, i % 2 === 0);
     });
   }
