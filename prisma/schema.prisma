@@ -73,6 +73,7 @@ model Platform {
   inspections      Inspection[]
   shifts           Shift[]
   budget_periods   BudgetPeriod[]
+  meal_ratings MealRating[]
 
   @@map("platforms")
 }
@@ -519,4 +520,18 @@ model FinanceSettings {
   platform        Platform @relation(fields: [platform_id], references: [id])
 
   @@map("finance_settings")
+}
+
+model MealRating {
+  id          Int      @id @default(autoincrement())
+  platform_id Int
+  meal_date   DateTime
+  meal_type   String
+  rating      Int
+  comment     String?
+  created_at  DateTime @default(now())
+
+  platform    Platform @relation(fields: [platform_id], references: [id])
+
+  @@map("meal_ratings")
 }

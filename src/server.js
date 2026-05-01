@@ -63,6 +63,7 @@ import settingsRouter from './modules/settings/settings.routes.js';
 import auditRouter from './modules/audit/audit.routes.js';
 import adminRouter from './modules/admin/admin.routes.js';
 import financeRouter from './modules/finance/finance.routes.js';
+import ratingsRouter from './modules/ratings/ratings.routes.js';
 
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
@@ -79,6 +80,7 @@ app.use('/api/settings', settingsRouter);
 app.use('/api/audit', auditRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/finance', financeRouter);
+app.use('/api/ratings', ratingsRouter);
 
 // Global error handler
 app.use((err, req, res, next) => {
