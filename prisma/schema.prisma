@@ -36,6 +36,7 @@ model User {
   notifications      Notification[]
   audit_logs         AuditLog[]
   photos             PhotoEvidence[]
+  equipment_logs    EquipmentLog[] @relation("EquipmentLogger")
 
   @@map("users")
 }
@@ -62,6 +63,7 @@ model Platform {
   contracts         Contract[]
   supplier_payments SupplierPayment[]
   finance_settings  FinanceSettings?
+  equipment         Equipment[]
 
   users            User[]
   inventory_items  InventoryItem[]
@@ -534,4 +536,38 @@ model MealRating {
   platform    Platform @relation(fields: [platform_id], references: [id])
 
   @@map("meal_ratings")
+}
+
+model Equipment {
+  id                Int       @id @default(autoincrement())
+  platform_id       Int?
+  name              String
+  equipment_type    String
+  model             String?
+  serial_number     String?
+  installation_date DateTime?
+  last_service_date DateTime?
+  next_service_date DateTime?
+  status            String    @default("OPERATIONAL")
+  notes             String?
+  created_at        DateTime  @default(now())
+
+  platform          Platform? @relation(fields: [platform_id], references: [id])
+  logs              EquipmentLog[]
+
+  @@map("equipment")
+}
+
+model EquipmentLog {
+  id           Int      @id @default(autoincrement())
+  equipment_id Int
+  log_type     String
+  description  String
+  logged_by_id Int
+  created_at   DateTime @default(now())
+
+  equipment    Equipment @relation(fields: [equipment_id], references: [id])
+  logged_by    User      @relation("EquipmentLogger", fields: [logged_by_id], references: [id])
+
+  @@map("equipment_logs")
 }
