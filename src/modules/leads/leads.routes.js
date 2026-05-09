@@ -1,13 +1,14 @@
 import { Router } from 'express';
-import * as Brevo from '@getbrevo/brevo';
+import SibApiV3Sdk from '@getbrevo/brevo';
+const { TransactionalEmailsApi, SendSmtpEmail } = SibApiV3Sdk;
 
 const router = Router();
 
-const apiInstance = new Brevo.TransactionalEmailsApi();
+const apiInstance = new TransactionalEmailsApi();
 apiInstance.authentications['apiKey'].apiKey = process.env.BREVO_API_KEY;
 
 async function sendEmail(to, subject, html) {
-  const sendSmtpEmail = new Brevo.SendSmtpEmail();
+  const sendSmtpEmail = new SendSmtpEmail();
   sendSmtpEmail.sender = { name: 'Camp Boss', email: 'noreply@mollernik.xyz' };
   sendSmtpEmail.to = [{ email: to }];
   sendSmtpEmail.subject = subject;
