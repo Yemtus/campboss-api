@@ -5,7 +5,7 @@ const router = Router();
 
 async function sendEmail(to, subject, html) {
   await axios.post('https://api.brevo.com/v3/smtp/email', {
-    sender: { name: 'Camp Boss', email: 'noreply@mollernik.xyz' },
+    sender: { name: 'Camp Boss', email: 'mollernik5@gmail.com' },
     to: [{ email: to }],
     subject,
     htmlContent: html,
