@@ -22,14 +22,24 @@ router.post('/reset-demo', async (req, res) => {
     }
 
     // Wipe demo data
-    await prisma.smsLog.deleteMany({});
-    await prisma.notification.deleteMany({});
-    await prisma.auditLog.deleteMany({ where: { user_id: demoUser.id } });
-    await prisma.expense.deleteMany({ where: { recorder: { id: demoUser.id } } });
-    await prisma.shift.deleteMany({ where: { creator: { id: demoUser.id } } });
-    await prisma.receivingCheck.deleteMany({ where: { checked_by_id: demoUser.id } });
-    await prisma.haccpCheck.deleteMany({ where: { checked_by_id: demoUser.id } });
-    const itemIds = await prisma.inventoryItem.findMany({ where: { platform_id: platform.id }, select: { id: true } });
+   await prisma.smsLog.deleteMany({});
+await prisma.notification.deleteMany({});
+await prisma.auditLog.deleteMany({ where: { user_id: demoUser.id } });
+await prisma.mealRating.deleteMany({ where: { platform_id: platform.id } });
+await prisma.equipmentLog.deleteMany({});
+await prisma.equipment.deleteMany({ where: { platform_id: platform.id } });
+await prisma.inspectionItem.deleteMany({});
+await prisma.inspection.deleteMany({ where: { platform_id: platform.id } });
+await prisma.handoverReport.deleteMany({ where: { platform_id: platform.id } });
+await prisma.invoiceItem.deleteMany({});
+await prisma.invoice.deleteMany({});
+await prisma.contract.deleteMany({ where: { platform_id: platform.id } });
+await prisma.supplierPayment.deleteMany({ where: { platform_id: platform.id } });
+await prisma.expense.deleteMany({ where: { recorder: { id: demoUser.id } } });
+await prisma.shift.deleteMany({ where: { creator: { id: demoUser.id } } });
+await prisma.receivingCheck.deleteMany({ where: { checked_by_id: demoUser.id } });
+await prisma.haccpCheck.deleteMany({ where: { checked_by_id: demoUser.id } });
+const itemIds = await prisma.inventoryItem.findMany({ where: { platform_id: platform.id }, select: { id: true } });
 const ids = itemIds.map(i => i.id);
 await prisma.inventoryBatch.deleteMany({ where: { item_id: { in: ids } } });
 await prisma.inventoryItem.deleteMany({ where: { platform_id: platform.id } });

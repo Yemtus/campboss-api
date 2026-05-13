@@ -210,26 +210,31 @@ model CleaningLog {
   @@map("cleaning_logs")
 }
 
-model HandoverReport {
-  id           Int       @id @default(autoincrement())
-  shift        String
-  date         DateTime  @db.Date
-  summary      String?
-  notes        String?
-  status       String    @default("draft")
-  author_id    Int
-  signed_by_id Int?
-  signed_at    DateTime?
-  sign_device  String?
-  platform_id  Int?
-  created_at   DateTime  @default(now())
+// ── HANDOVER REPORTS ──────────────────────────────────────
+  const handoverData = [
+    { shift: 'DAY', summary: 'All HACCP checks completed. Walk-in Freezer #2 flagged for service. Delivery from Zenith Foods received and signed off. 62 crew on board.', daysAgo: 0 },
+    { shift: 'NIGHT', summary: 'Quiet shift. All temperature checks passed. Prep for tomorrow breakfast completed. No incidents to report.', daysAgo: 1 },
+    { shift: 'DAY', summary: 'Hot holding unit serviced by technician. HACCP fail logged and corrective action taken. Delivery from Niger Delta Provisions received. 58 crew on board.', daysAgo: 2 },
+    { shift: 'NIGHT', summary: 'All checks passed. Menu prep for next day completed. Gas cylinder replaced - utilities expense logged.', daysAgo: 3 },
+  ];
 
-  author    User      @relation("HandoverAuthor", fields: [author_id], references: [id])
-  signed_by User?     @relation("HandoverSigner", fields: [signed_by_id], references: [id])
-  platform  Platform? @relation(fields: [platform_id], references: [id])
-
-  @@map("handover_reports")
-}
+  for (const h of handoverData) {
+    const date = new Date();
+    date.setDate(date.getDate() - h.daysAgo);
+    await prisma.handoverReport.create({
+      data: {
+        shift: h.shift,
+        date: date,
+        summary: h.summary,
+        status: 'signed',
+        author_id: demoUser.id,
+        platform_id: platform.id,
+        signed_by_id: demoUser.id,
+        signed_at: date,
+      },
+    });
+  }
+  console.log('Handover reports seeded');
 
 model Inspection {
   id           Int      @id @default(autoincrement())
