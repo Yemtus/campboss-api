@@ -37,6 +37,7 @@ model User {
   audit_logs         AuditLog[]
   photos             PhotoEvidence[]
   equipment_logs    EquipmentLog[] @relation("EquipmentLogger")
+  payment_transactions PaymentTransaction[] @relation("PaymentInitiator")
 
   @@map("users")
 }
@@ -473,6 +474,7 @@ model Invoice {
 
   contract        Contract  @relation(fields: [contract_id], references: [id])
   items           InvoiceItem[]
+  transactions   PaymentTransaction[]
 
   @@map("invoices")
 }
@@ -575,4 +577,24 @@ model EquipmentLog {
   logged_by    User      @relation("EquipmentLogger", fields: [logged_by_id], references: [id])
 
   @@map("equipment_logs")
+}
+
+model PaymentTransaction {
+  id             Int       @id @default(autoincrement())
+  reference      String    @unique
+  type           String
+  amount         Decimal
+  currency       String    @default("NGN")
+  status         String    @default("PENDING")
+  provider       String    @default("PAYSTACK")
+  invoice_id     Int?
+  initiated_by_id Int?
+  paid_at        DateTime?
+  metadata       String?
+  created_at     DateTime  @default(now())
+
+  invoice        Invoice?  @relation(fields: [invoice_id], references: [id])
+  initiated_by   User?     @relation("PaymentInitiator", fields: [initiated_by_id], references: [id])
+
+  @@map("payment_transactions")
 }

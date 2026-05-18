@@ -66,6 +66,7 @@ import financeRouter from './modules/finance/finance.routes.js';
 import ratingsRouter from './modules/ratings/ratings.routes.js';
 import equipmentRouter from './modules/equipment/equipment.routes.js';
 import leadsRouter from './modules/leads/leads.routes.js';
+import paymentsRouter from './modules/payments/payments.routes.js';
 
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
@@ -85,6 +86,7 @@ app.use('/api/finance', financeRouter);
 app.use('/api/ratings', ratingsRouter);
 app.use('/api/equipment', equipmentRouter);
 app.use('/api/leads', leadsRouter);
+app.use('/api/payments', paymentsRouter);
 
 // Global error handler
 app.use((err, req, res, next) => {
